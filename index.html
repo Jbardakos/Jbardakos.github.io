@@ -2,32 +2,150 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>2&#94;6 Studio</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        header {
-            background-color: #f2f2f2;
-            padding: 20px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShoggothMeet - Scheduling System</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <div class="ascii-header">
+            <pre>
+    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+    ▓▒                                                             ▒▓
+    ▓▒   ╔═╗ ╦ ╦ ╔═╗ ╔═╗ ╔═╗ ╔═╗ ╔╦╗ ╦ ╦   ╔╦╗ ╔═╗ ╔═╗ ╔╦╗       ▒▓
+    ▓▒   ╚═╗ ╠═╣ ║ ║ ║ ╦ ║ ╦ ║ ║  ║  ╠═╣   ║║║ ║╣  ║╣   ║        ▒▓
+    ▓▒   ╚═╝ ╩ ╩ ╚═╝ ╚═╝ ╚═╝ ╚═╝  ╩  ╩ ╩  ╩ ╩ ╚═╝ ╚═╝  ╩        ▒▓
+    ▓▒                                                             ▒▓
+    ▓▒               ★ WITH DR. BARDAKOS ★                        ▒▓
+    ▓▒          ◢◤◢◤ SCHEDULING MATRIX ◢◤◢◤                       ▒▓
+    ▓▒                                                             ▒▓
+    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
-    <header>
-        <h1>Welcome to 2&#94;6 Art Studio</h1>
-    </header>
+       ∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴∵∴
+            </pre>
+        </div>
 
-    <main>
-        <p>Hello, World!</p>
-        <p></p>
-    </main>
+        <!-- Login/Signup Screen -->
+        <div id="auth-screen" class="screen active">
+            <div class="auth-container">
+                <div class="ascii-box">
+                    <pre>
+   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+   ▓▒ ░▒▓█►  AUTHENTICATION PORTAL  ◄█▓▒░         ▒▓
+   ▓▒        ≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋              ▒▓
+   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                    </pre>
+                </div>
 
-    <footer>
-        <p>Contact us at: <a href="mailto:2power6@gmail.com">2power6@gmail.com</a></p>
-    </footer>
+                <div id="login-form" class="auth-form">
+                    <h2>▓▒░ LOGIN ░▒▓</h2>
+                    <div class="form-group">
+                        <label>◄► Username:</label>
+                        <input type="text" id="login-username" class="ascii-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>◄► Password:</label>
+                        <input type="password" id="login-password" class="ascii-input" required>
+                    </div>
+                    <button onclick="login()" class="ascii-button">▓▒░ ENTER SYSTEM ░▒▓</button>
+                    <div class="toggle-auth">
+                        ∴ Don't have an account? <a href="#" onclick="toggleAuthForm()">⚡ Sign Up ⚡</a>
+                    </div>
+                </div>
 
+                <div id="signup-form" class="auth-form" style="display: none;">
+                    <h2>▓▒░ REGISTER NEW USER ░▒▓</h2>
+                    <div class="form-group">
+                        <label>◄► Username:</label>
+                        <input type="text" id="signup-username" class="ascii-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>◄► Full Name:</label>
+                        <input type="text" id="signup-name" class="ascii-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>◄► Email:</label>
+                        <input type="email" id="signup-email" class="ascii-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>◄► Password:</label>
+                        <input type="password" id="signup-password" class="ascii-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>◄► Confirm Password:</label>
+                        <input type="password" id="signup-confirm" class="ascii-input" required>
+                    </div>
+                    <button onclick="signup()" class="ascii-button">▓▒░ CREATE ACCOUNT ░▒▓</button>
+                    <div class="toggle-auth">
+                        ∴ Already registered? <a href="#" onclick="toggleAuthForm()">⚡ Login ⚡</a>
+                    </div>
+                </div>
+
+                <div id="auth-message" class="message"></div>
+
+                <div class="admin-controls">
+                    <button onclick="clearAllData()" class="admin-button">⚠ CLEAR ALL DATA ⚠</button>
+                    <button onclick="showAllUsers()" class="admin-button">◉ VIEW ALL USERS ◉</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Availability Selection Screen -->
+        <div id="availability-screen" class="screen">
+            <div class="welcome-banner">
+                <span id="welcome-user"></span>
+                <button onclick="logout()" class="logout-button">▓▒ EXIT ▒▓</button>
+            </div>
+
+            <div class="ascii-box">
+                <pre>
+
+        ⚡⚡ SET YOUR AVAILABILITY (9:00-18:00) ⚡⚡
+              ≋≋≋ MONDAY TO FRIDAY ONLY ≋≋≋
+            ◢◤ Click slots to toggle ON/OFF ◢◤
+
+                </pre>
+            </div>
+
+            <div id="calendar-container">
+                <!-- Calendar will be generated here -->
+            </div>
+
+            <div class="actions">
+                <button onclick="saveAvailability()" class="ascii-button">▓▒░ SAVE AVAILABILITY ░▒▓</button>
+                <button onclick="showOptimalTimes()" class="ascii-button">▓▒░ FIND OPTIMAL TIMES ░▒▓</button>
+            </div>
+
+            <div id="availability-message" class="message"></div>
+        </div>
+
+        <!-- Optimal Times Screen -->
+        <div id="optimal-screen" class="screen">
+            <div class="welcome-banner">
+                <span id="optimal-user"></span>
+                <button onclick="backToAvailability()" class="ascii-button-small">◄ BACK</button>
+                <button onclick="logout()" class="logout-button">▓▒ EXIT ▒▓</button>
+            </div>
+
+            <div class="ascii-box">
+                <pre>
+   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+   ▓▒  ★★★ OPTIMAL MEETING TIMES ★★★                            ▒▓
+   ▓▒  ≋≋≋ Times when ALL users are available ≋≋≋              ▒▓
+   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                </pre>
+            </div>
+
+            <div id="optimal-times-container">
+                <!-- Optimal times will be displayed here -->
+            </div>
+
+            <div id="users-availability-container">
+                <!-- Individual user availabilities -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
