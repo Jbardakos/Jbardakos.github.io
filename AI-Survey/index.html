@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>AI Research Study on Co-Creativity (Artists / Designers)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[RESEARCH PROTOCOL] AI Co-Creativity Study</title>
-    
+
     <!-- React and ReactDOM from CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel Standalone for JSX transformation -->
+
+    <!-- Babel for JSX in browser (ok for this use) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <style>
         body {
             margin: 0;
@@ -20,492 +20,557 @@
             background: #000;
             color: #fff;
         }
+
+        .container {
+            min-height: 100vh;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #fff;
+            padding: 20px;
+            background: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #fff;
+        }
+
+        .title {
+            font-size: 20px;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            margin: 5px 0;
+            opacity: 0.8;
+        }
+
+        .form-section {
+            margin-top: 30px;
+        }
+
+        .field {
+            margin-bottom: 25px;
+        }
+
+        .label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #000;
+            border: 1px solid #fff;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .input:focus {
+            box-shadow: 0 0 0 1px #fff;
+        }
+
+        .input.error {
+            border-color: #fff;
+            background: #fff;
+            color: #000;
+        }
+
+        .error-text {
+            color: #000;
+            font-size: 12px;
+            margin-top: 5px;
+            background: #fff;
+            padding: 2px 5px;
+            display: inline-block;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-input {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .note {
+            margin: 30px 0;
+            padding: 15px;
+            border: 1px dashed #666;
+            font-size: 12px;
+            text-align: center;
+            color: #ccc;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: #000;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #000;
+            color: #fff;
+            box-shadow: 0 0 0 2px #fff;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid #fff;
+            white-space: pre-wrap;
+        }
+
+        .status.success {
+            background: #fff;
+            color: #000;
+        }
+
+        .status.error {
+            background: #000;
+            border: 2px solid #fff;
+            color: #fff;
+        }
+
+        .ascii-divider {
+            text-align: center;
+            margin: 30px 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .terminal {
+                padding: 15px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // GitHub configuration
-        const GITHUB_OWNER = 'Jbardakos';
-        const GITHUB_REPO = 'Jbardakos.github.io';
-        const WORKFLOW_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/form-submission.yml/dispatches`;
-        const WORKFLOW_TOKEN = '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';
+<div id="root"></div>
 
-        const ResearchStudyForm = () => {
-            const [formData, setFormData] = useState({
-                fullName: '',
-                profession: '',
-                email: '',
-                mobile: '',
-                preferredDay: '',
-                preferredTime: '',
-                githubId: ''
+<script type="text/babel">
+    const { useState } = React;
+
+    // GitHub configuration
+    const CLIENT_ID = '0v23IiaqIPNxfIv6yM2x';          // Your OAuth App Client ID
+    const OWNER = 'jbardakos';
+    const REPO = 'jbardakos.github.io';
+    const WORKFLOW_FILE = 'create-issue.yml';          // The workflow you created
+    const DEVICE_CODE_URL = 'https://github.com/login/device/code';
+    const TOKEN_URL = 'https://github.com/login/oauth/access_token';
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    async function startDeviceCodeFlow() {
+        const params = new URLSearchParams();
+        params.append('client_id', CLIENT_ID);
+        params.append('scope', 'public_repo');
+
+        const response = await fetch(DEVICE_CODE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
+            body: params.toString()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to start device flow');
+        }
+
+        return response.json();
+    }
+
+    async function pollForToken(device_code, interval_sec) {
+        const params = new URLSearchParams();
+        params.append('client_id', CLIENT_ID);
+        params.append('device_code', device_code);
+        params.append('grant_type', 'urn:ietf:params:oauth:grant-type:device_code');
+
+        while (true) {
+            const response = await fetch(TOKEN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: params.toString()
             });
-            
-            const [isSubmitting, setIsSubmitting] = useState(false);
-            const [submitStatus, setSubmitStatus] = useState(null);
-            const [errors, setErrors] = useState({});
 
-            const validateForm = () => {
-                const newErrors = {};
-                
-                if (!formData.fullName.trim()) newErrors.fullName = 'REQUIRED';
-                if (!formData.profession.trim()) newErrors.profession = 'REQUIRED';
-                if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                    newErrors.email = 'INVALID EMAIL';
-                }
-                if (!formData.mobile.match(/^\+?[\d\s-()]+$/)) {
-                    newErrors.mobile = 'INVALID NUMBER';
-                }
-                if (!formData.preferredDay) newErrors.preferredDay = 'SELECT DAY';
-                if (!formData.preferredTime.trim()) newErrors.preferredTime = 'REQUIRED';
-                if (!formData.githubId.trim()) newErrors.githubId = 'REQUIRED';
-                
-                setErrors(newErrors);
-                return Object.keys(newErrors).length === 0;
-            };
+            if (!response.ok) {
+                throw new Error('Failed to poll for access token');
+            }
 
-            const handleInputChange = (e) => {
-                const { name, value } = e.target;
-                setFormData(prev => ({
+            const data = await response.json();
+
+            if (data.access_token) {
+                return data.access_token;
+            }
+
+            if (data.error === 'authorization_pending') {
+                await sleep(interval_sec * 1000);
+                continue;
+            }
+
+            if (data.error === 'slow_down') {
+                await sleep((interval_sec + 5) * 1000);
+                continue;
+            }
+
+            throw new Error(data.error_description || data.error);
+        }
+    }
+
+    async function triggerWorkflow(accessToken, payload) {
+        // If default branch is "master", change ref: "master"
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_FILE}/dispatches`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/vnd.github+json',
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ref: 'main',
+                inputs: payload
+            })
+        });
+
+        if (!response.ok) {
+            const txt = await response.text().catch(() => '');
+            throw new Error('Workflow dispatch failed: ' + response.status + ' ' + txt);
+        }
+    }
+
+    const ResearchStudyForm = () => {
+        const [formData, setFormData] = useState({
+            fullName: '',
+            profession: '',
+            email: '',
+            mobile: '',
+            preferredDay: '',
+            preferredTime: '',
+            githubId: ''
+        });
+
+        const [errors, setErrors] = useState({});
+        const [isSubmitting, setIsSubmitting] = useState(false);
+        const [submitStatus, setSubmitStatus] = useState(null);
+        const [deviceMessage, setDeviceMessage] = useState(null);
+
+        const validateForm = () => {
+            const newErrors = {};
+
+            if (!formData.fullName.trim()) newErrors.fullName = 'REQUIRED';
+            if (!formData.profession.trim()) newErrors.profession = 'REQUIRED';
+
+            if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                newErrors.email = 'INVALID EMAIL';
+            }
+            if (!formData.mobile.match(/^\+?[\d\s-()]+$/)) {
+                newErrors.mobile = 'INVALID NUMBER';
+            }
+            if (!formData.preferredDay) newErrors.preferredDay = 'SELECT DAY';
+            if (!formData.preferredTime.trim()) newErrors.preferredTime = 'REQUIRED';
+            if (!formData.githubId.trim()) newErrors.githubId = 'REQUIRED';
+
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
+        };
+
+        const handleInputChange = (e) => {
+            const { name, value } = e.target;
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+            if (errors[name]) {
+                setErrors(prev => ({
                     ...prev,
-                    [name]: value
+                    [name]: ''
                 }));
-                if (errors[name]) {
-                    setErrors(prev => ({
-                        ...prev,
-                        [name]: ''
-                    }));
-                }
-            };
+            }
+        };
 
-            const triggerWorkflow = async () => {
-                try {
-                    const response = await fetch(WORKFLOW_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `token ${WORKFLOW_TOKEN}`,
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            ref: 'main',
-                            inputs: {
-                                fullName: formData.fullName,
-                                profession: formData.profession,
-                                email: formData.email,
-                                mobile: formData.mobile,
-                                preferredDay: formData.preferredDay,
-                                preferredTime: formData.preferredTime,
-                                githubId: formData.githubId
-                            }
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`GitHub API error: ${response.status}`);
-                    }
-                    
-                    return true;
-                } catch (error) {
-                    console.error('Error triggering workflow:', error);
-                    throw error;
-                }
-            };
+        const handleSubmit = async (e) => {
+            e.preventDefault();
+            if (!validateForm()) return;
 
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                
-                if (!validateForm()) {
-                    return;
-                }
-                
-                setIsSubmitting(true);
-                setSubmitStatus(null);
-                
-                try {
-                    await triggerWorkflow();
-                    setSubmitStatus('success');
-                    setFormData({
-                        fullName: '',
-                        profession: '',
-                        email: '',
-                        mobile: '',
-                        preferredDay: '',
-                        preferredTime: '',
-                        githubId: ''
-                    });
-                } catch (error) {
-                    setSubmitStatus('error');
-                    console.error('Submission error:', error);
-                } finally {
-                    setIsSubmitting(false);
-                }
-            };
+            setIsSubmitting(true);
+            setSubmitStatus(null);
+            setDeviceMessage(null);
 
-            return (
-                <div className="container">
-                    <style>{`
-                        .container {
-                            min-height: 100vh;
-                            background: #000;
-                            color: #fff;
-                            padding: 20px;
-                            font-family: 'Courier New', monospace;
-                        }
-                        
-                        .terminal {
-                            max-width: 800px;
-                            margin: 0 auto;
-                            border: 1px solid #fff;
-                            padding: 20px;
-                            background: #000;
-                        }
-                        
-                        .header {
-                            text-align: center;
-                            margin-bottom: 30px;
-                            padding-bottom: 20px;
-                            border-bottom: 1px dashed #fff;
-                        }
-                        
-                        .title {
-                            font-size: 20px;
-                            margin: 0 0 10px 0;
-                            letter-spacing: 2px;
-                        }
-                        
-                        .subtitle {
-                            font-size: 14px;
-                            margin: 5px 0;
-                            opacity: 0.8;
-                        }
-                        
-                        .form-section {
-                            margin-top: 30px;
-                        }
-                        
-                        .field {
-                            margin-bottom: 25px;
-                        }
-                        
-                        .label {
-                            display: block;
-                            font-size: 14px;
-                            margin-bottom: 8px;
-                            text-transform: uppercase;
-                            letter-spacing: 1px;
-                        }
-                        
-                        .input {
-                            width: 100%;
-                            padding: 8px 12px;
-                            background: #000;
-                            border: 1px solid #fff;
-                            color: #fff;
-                            font-family: 'Courier New', monospace;
-                            font-size: 14px;
-                            outline: none;
-                            box-sizing: border-box;
-                        }
-                        
-                        .input:focus {
-                            box-shadow: 0 0 0 1px #fff;
-                        }
-                        
-                        .input.error {
-                            border-color: #fff;
-                            background: #fff;
-                            color: #000;
-                        }
-                        
-                        .error-text {
-                            color: #fff;
-                            font-size: 12px;
-                            margin-top: 5px;
-                            background: #fff;
-                            color: #000;
-                            padding: 2px 5px;
-                            display: inline-block;
-                        }
-                        
-                        .radio-group {
-                            display: flex;
-                            gap: 30px;
-                            margin-top: 10px;
-                        }
-                        
-                        .radio-label {
-                            display: flex;
-                            align-items: center;
-                            cursor: pointer;
-                        }
-                        
-                        .radio-input {
-                            width: 16px;
-                            height: 16px;
-                            margin-right: 8px;
-                            cursor: pointer;
-                        }
-                        
-                        .note {
-                            margin: 30px 0;
-                            padding: 15px;
-                            border: 1px dashed #666;
-                            font-size: 12px;
-                            text-align: center;
-                            color: #ccc;
-                        }
-                        
-                        .submit-btn {
-                            width: 100%;
-                            padding: 12px;
-                            background: #fff;
-                            color: #000;
-                            border: none;
-                            font-family: 'Courier New', monospace;
-                            font-size: 16px;
-                            font-weight: bold;
-                            letter-spacing: 2px;
-                            cursor: pointer;
-                            text-transform: uppercase;
-                            transition: all 0.2s;
-                        }
-                        
-                        .submit-btn:hover {
-                            background: #000;
-                            color: #fff;
-                            box-shadow: 0 0 0 2px #fff;
-                        }
-                        
-                        .submit-btn:disabled {
-                            opacity: 0.5;
-                            cursor: not-allowed;
-                        }
-                        
-                        .status {
-                            margin-top: 20px;
-                            padding: 15px;
-                            text-align: center;
-                            font-size: 14px;
-                            border: 1px solid #fff;
-                        }
-                        
-                        .status.success {
-                            background: #fff;
-                            color: #000;
-                        }
-                        
-                        .status.error {
-                            background: #000;
-                            border: 2px solid #fff;
-                        }
-                        
-                        .ascii-divider {
-                            text-align: center;
-                            margin: 30px 0;
-                            color: #666;
-                            font-size: 12px;
-                        }
-                        
-                        @media (max-width: 640px) {
-                            .terminal {
-                                padding: 15px;
-                            }
-                            
-                            .radio-group {
-                                flex-direction: column;
-                                gap: 15px;
-                            }
-                        }
-                    `}</style>
-                    
-                    <div className="terminal">
-                        <div className="header">
-                            <pre>{`
+            try {
+                const deviceData = await startDeviceCodeFlow();
+
+                setDeviceMessage(
+                    `1. Open this URL in your browser:\n` +
+                    `${deviceData.verification_uri}\n\n` +
+                    `2. Enter this code:\n` +
+                    `${deviceData.user_code}\n\n` +
+                    `3. Authorize the application.\n\n` +
+                    `After you authorize, the submission will complete automatically.`
+                );
+
+                const accessToken = await pollForToken(deviceData.device_code, deviceData.interval);
+
+                await triggerWorkflow(accessToken, {
+                    fullName: formData.fullName,
+                    profession: formData.profession,
+                    email: formData.email,
+                    mobile: formData.mobile,
+                    preferredDay: formData.preferredDay,
+                    preferredTime: formData.preferredTime,
+                    githubId: formData.githubId
+                });
+
+                setSubmitStatus('success');
+                setFormData({
+                    fullName: '',
+                    profession: '',
+                    email: '',
+                    mobile: '',
+                    preferredDay: '',
+                    preferredTime: '',
+                    githubId: ''
+                });
+                setDeviceMessage(null);
+            } catch (err) {
+                console.error(err);
+                setSubmitStatus('error');
+            } finally {
+                setIsSubmitting(false);
+            }
+        };
+
+        return (
+            <div className="container">
+                <div className="terminal">
+                    <div className="header">
+                        <pre>{`
 +==================================================+
 |                                                  |
 |         AI RESEARCH STUDY ON CO-CREATIVITY       |
 |               ARTISTS / DESIGNERS                |
 |                                                  |
 +==================================================+`}</pre>
-                            <p className="subtitle">
-                                PRINCIPAL INVESTIGATORS<br/>
-                                PROF. IANNIS BARDAKOS | PROF. NENA ROA SEILER
-                            </p>
+                        <p className="subtitle">
+                            PRINCIPAL INVESTIGATORS<br/>
+                            PROF. IANNIS BARDAKOS | PROF. NENA ROA SEILER
+                        </p>
+                    </div>
+
+                    <form className="form-section" onSubmit={handleSubmit}>
+                        <div className="field">
+                            <label className="label">[01] FULL NAME</label>
+                            <input
+                                type="text"
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={handleInputChange}
+                                className={`input ${errors.fullName ? 'error' : ''}`}
+                                placeholder="Enter your full name"
+                            />
+                            {errors.fullName && <div className="error-text">! {errors.fullName}</div>}
                         </div>
-                        
-                        <form className="form-section" onSubmit={handleSubmit}>
-                            <div className="field">
-                                <label className="label">[01] FULL NAME</label>
-                                <input
-                                    type="text"
-                                    name="fullName"
-                                    value={formData.fullName}
-                                    onChange={handleInputChange}
-                                    className={`input ${errors.fullName ? 'error' : ''}`}
-                                    placeholder="Enter your full name"
-                                />
-                                {errors.fullName && (
-                                    <div className="error-text">! {errors.fullName}</div>
-                                )}
+
+                        <div className="field">
+                            <label className="label">[02] PROFESSION / ROLE</label>
+                            <input
+                                type="text"
+                                name="profession"
+                                value={formData.profession}
+                                onChange={handleInputChange}
+                                className={`input ${errors.profession ? 'error' : ''}`}
+                                placeholder="e.g., Graphic Designer, Digital Artist"
+                            />
+                            {errors.profession && <div className="error-text">! {errors.profession}</div>}
+                        </div>
+
+                        <div className="field">
+                            <label className="label">[03] EMAIL ADDRESS</label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className={`input ${errors.email ? 'error' : ''}`}
+                                placeholder="your.email@example.com"
+                            />
+                            {errors.email && <div className="error-text">! {errors.email}</div>}
+                        </div>
+
+                        <div className="field">
+                            <label className="label">[04] MOBILE NUMBER (WITH COUNTRY CODE)</label>
+                            <input
+                                type="tel"
+                                name="mobile"
+                                value={formData.mobile}
+                                onChange={handleInputChange}
+                                className={`input ${errors.mobile ? 'error' : ''}`}
+                                placeholder="+1 234 567 8900"
+                            />
+                            {errors.mobile && <div className="error-text">! {errors.mobile}</div>}
+                        </div>
+
+                        <div className="field">
+                            <label className="label">[05] PREFERRED DAY FOR ONBOARDING / QUESTIONS / VIDEO CALL</label>
+                            <div className="radio-group">
+                                <label className="radio-label">
+                                    <input
+                                        type="radio"
+                                        name="preferredDay"
+                                        value="weekdays"
+                                        checked={formData.preferredDay === 'weekdays'}
+                                        onChange={handleInputChange}
+                                        className="radio-input"
+                                    />
+                                    WEEKDAYS (MON-FRI)
+                                </label>
+                                <label className="radio-label">
+                                    <input
+                                        type="radio"
+                                        name="preferredDay"
+                                        value="weekends"
+                                        checked={formData.preferredDay === 'weekends'}
+                                        onChange={handleInputChange}
+                                        className="radio-input"
+                                    />
+                                    WEEKENDS (SAT-SUN)
+                                </label>
                             </div>
-                            
-                            <div className="field">
-                                <label className="label">[02] PROFESSION / ROLE</label>
-                                <input
-                                    type="text"
-                                    name="profession"
-                                    value={formData.profession}
-                                    onChange={handleInputChange}
-                                    className={`input ${errors.profession ? 'error' : ''}`}
-                                    placeholder="e.g., Graphic Designer, Digital Artist"
-                                />
-                                {errors.profession && (
-                                    <div className="error-text">! {errors.profession}</div>
-                                )}
+                            {errors.preferredDay && <div className="error-text">! {errors.preferredDay}</div>}
+                        </div>
+
+                        <div className="field">
+                            <label className="label">[06] PREFERRED TIME (IST)</label>
+                            <input
+                                type="text"
+                                name="preferredTime"
+                                value={formData.preferredTime}
+                                onChange={handleInputChange}
+                                className={`input ${errors.preferredTime ? 'error' : ''}`}
+                                placeholder="e.g., 2:00 PM - 4:00 PM IST"
+                            />
+                            {errors.preferredTime && <div className="error-text">! {errors.preferredTime}</div>}
+                        </div>
+
+                        <div className="field">
+                            <label className="label">[07] GITHUB ID</label>
+                            <input
+                                type="text"
+                                name="githubId"
+                                value={formData.githubId}
+                                onChange={handleInputChange}
+                                className={`input ${errors.githubId ? 'error' : ''}`}
+                                placeholder="your-github-username"
+                            />
+                            {errors.githubId && <div className="error-text">! {errors.githubId}</div>}
+                        </div>
+
+                        <div className="note">
+                            NOTE: MEETINGS WILL BE RECORDED<br/>
+                            WRITTEN GUIDES WILL BE PROVIDED
+                        </div>
+
+                        {deviceMessage && (
+                            <div className="status">
+                                {deviceMessage}
                             </div>
-                            
-                            <div className="field">
-                                <label className="label">[03] EMAIL ADDRESS</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className={`input ${errors.email ? 'error' : ''}`}
-                                    placeholder="your.email@example.com"
-                                />
-                                {errors.email && (
-                                    <div className="error-text">! {errors.email}</div>
-                                )}
+                        )}
+
+                        <button
+                            type="submit"
+                            className="submit-btn"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'WAITING FOR AUTHORIZATION...' : '>> SUBMIT DATA <<'}
+                        </button>
+
+                        {submitStatus === 'success' && (
+                            <div className="status success">
+                                [SUCCESS] SUBMISSION RECORDED
+                                <br/>
+                                CHECK REPO: CSV + ISSUE CREATED
                             </div>
-                            
-                            <div className="field">
-                                <label className="label">[04] MOBILE NUMBER (WITH COUNTRY CODE)</label>
-                                <input
-                                    type="tel"
-                                    name="mobile"
-                                    value={formData.mobile}
-                                    onChange={handleInputChange}
-                                    className={`input ${errors.mobile ? 'error' : ''}`}
-                                    placeholder="+1 234 567 8900"
-                                />
-                                {errors.mobile && (
-                                    <div className="error-text">! {errors.mobile}</div>
-                                )}
+                        )}
+
+                        {submitStatus === 'error' && (
+                            <div className="status error">
+                                [ERROR] SUBMISSION FAILED
+                                <br/>
+                                PLEASE TRY AGAIN OR CONTACT THE RESEARCH TEAM
                             </div>
-                            
-                            <div className="field">
-                                <label className="label">[05] PREFERRED DAY FOR ONBOARDING / QUESTIONS / VIDEO CALL</label>
-                                <div className="radio-group">
-                                    <label className="radio-label">
-                                        <input
-                                            type="radio"
-                                            name="preferredDay"
-                                            value="weekdays"
-                                            checked={formData.preferredDay === 'weekdays'}
-                                            onChange={handleInputChange}
-                                            className="radio-input"
-                                        />
-                                        WEEKDAYS (MON-FRI)
-                                    </label>
-                                    <label className="radio-label">
-                                        <input
-                                            type="radio"
-                                            name="preferredDay"
-                                            value="weekends"
-                                            checked={formData.preferredDay === 'weekends'}
-                                            onChange={handleInputChange}
-                                            className="radio-input"
-                                        />
-                                        WEEKENDS (SAT-SUN)
-                                    </label>
-                                </div>
-                                {errors.preferredDay && (
-                                    <div className="error-text">! {errors.preferredDay}</div>
-                                )}
-                            </div>
-                            
-                            <div className="field">
-                                <label className="label">[06] PREFERRED TIME (IST)</label>
-                                <input
-                                    type="text"
-                                    name="preferredTime"
-                                    value={formData.preferredTime}
-                                    onChange={handleInputChange}
-                                    className={`input ${errors.preferredTime ? 'error' : ''}`}
-                                    placeholder="e.g., 2:00 PM - 4:00 PM IST"
-                                />
-                                {errors.preferredTime && (
-                                    <div className="error-text">! {errors.preferredTime}</div>
-                                )}
-                            </div>
-                            
-                            <div className="field">
-                                <label className="label">[07] GITHUB ID</label>
-                                <input
-                                    type="text"
-                                    name="githubId"
-                                    value={formData.githubId}
-                                    onChange={handleInputChange}
-                                    className={`input ${errors.githubId ? 'error' : ''}`}
-                                    placeholder="your-github-username"
-                                />
-                                {errors.githubId && (
-                                    <div className="error-text">! {errors.githubId}</div>
-                                )}
-                            </div>
-                            
-                            <div className="note">
-                                NOTE: MEETINGS WILL BE RECORDED<br/>
-                                WRITTEN GUIDES WILL BE PROVIDED
-                            </div>
-                            
-                            <div className="ascii-divider">
-                                <pre>{`- - - - - - - - - - - - - - - - - - - - - -`}</pre>
-                            </div>
-                            
-                            <button 
-                                type="submit" 
-                                className="submit-btn" 
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'TRANSMITTING...' : '>> SUBMIT DATA <<'}
-                            </button>
-                            
-                            {submitStatus === 'success' && (
-                                <div className="status success">
-                                    [SUCCESS] SUBMISSION RECORDED<br/>
-                                    THANK YOU FOR YOUR PARTICIPATION
-                                </div>
-                            )}
-                            
-                            {submitStatus === 'error' && (
-                                <div className="status error">
-                                    [ERROR] SUBMISSION FAILED<br/>
-                                    PLEASE CHECK CONFIGURATION AND RETRY
-                                </div>
-                            )}
-                        </form>
-                        
-                        <div className="ascii-divider">
-                            <pre>{`
+                        )}
+                    </form>
+
+                    <div className="ascii-divider">
+                        <pre>{`
 ==================================================
                     END OF FORM
 ==================================================`}</pre>
-                        </div>
                     </div>
                 </div>
-            );
-        };
+            </div>
+        );
+    };
 
-        // Render the form
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ResearchStudyForm />);
-    </script>
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ResearchStudyForm />);
+</script>
 </body>
 </html>
