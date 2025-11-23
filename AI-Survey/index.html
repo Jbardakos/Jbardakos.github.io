@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Research Study on Co-Creativity - Survey Form</title>
+    
+    <!-- React and ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // GitHub configuration - YOU NEED TO UPDATE THESE!
+        const GITHUB_OWNER = 'Jbardakos'; // Your GitHub username
+        const GITHUB_REPO = 'Jbardakos.github.io'; // Your repository name
+        const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'; // ⚠️ REPLACE WITH YOUR TOKEN
+        const CSV_PATH = 'AI-Survey/submissions.csv'; // Path where CSV will be saved
+        
+        // Icon components using Lucide
+        const Icon = ({ name, size = 18 }) => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, []);
+            return <i data-lucide={name} style={{ width: size, height: size }}></i>;
+        };
+
+        const ResearchStudyForm = () => {
+            const [formData, setFormData] = useState({
+                fullName: '',
+                profession: '',
+                email: '',
+                mobile: '',
+                preferredDay: '',
+                preferredTime: '',
+                githubId: ''
+            });
+            
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [submitStatus, setSubmitStatus] = useState(null);
+            const [errors, setErrors] = useState({});
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [submitStatus]);
+
+            const validateForm = () => {
+                const newErrors = {};
+                
+                if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+                if (!formData.profession.trim()) newErrors.profession = 'Profession is required';
+                if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                    newErrors.email = 'Valid email is required';
+                }
+                if (!formData.mobile.match(/^\+?[\d\s-()]+$/)) {
+                    newErrors.mobile = 'Valid phone number is required';
+                }
+                if (!formData.preferredDay) newErrors.preferredDay = 'Please select preferred days';
+                if (!formData.preferredTime.trim()) newErrors.preferredTime = 'Preferred time is required';
+                if (!formData.githubId.trim()) newErrors.githubId = 'GitHub ID is required';
+                
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: value
+                }));
+                // Clear error when user starts typing
+                if (errors[name]) {
+                    setErrors(prev => ({
+                        ...prev,
+                        [name]: ''
+                    }));
+                }
+            };
+
+            const formatCSVRow = (data) => {
+                const timestamp = new Date().toISOString();
+                const values = [
+                    timestamp,
+                    data.fullName,
+                    data.profession,
+                    data.email,
+                    data.mobile,
+                    data.preferredDay,
+                    data.preferredTime,
+                    data.githubId
+                ];
+                
+                // Escape values that contain commas or quotes
+                const escapedValues = values.map(val => {
+                    const strVal = String(val);
+                    if (strVal.includes(',') || strVal.includes('"') || strVal.includes('\n')) {
+                        return `"${strVal.replace(/"/g, '""')}"`;
+                    }
+                    return strVal;
+                });
+                
+                return escapedValues.join(',') + '\n';
+            };
+
+            const saveToGitHub = async () => {
+                const csvHeaders = 'Timestamp,Full Name,Profession,Email,Mobile,Preferred Day,Preferred Time,GitHub ID\n';
+                
+                try {
+                    // First, try to get the existing file
+                    let existingContent = csvHeaders;
+                    let sha = null;
+                    
+                    try {
+                        const getResponse = await fetch(
+                            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CSV_PATH}`,
+                            {
+                                headers: {
+                                    'Authorization': `token ${GITHUB_TOKEN}`,
+                                    'Accept': 'application/vnd.github.v3+json'
+                                }
+                            }
+                        );
+                        
+                        if (getResponse.ok) {
+                            const fileData = await getResponse.json();
+                            sha = fileData.sha;
+                            existingContent = atob(fileData.content);
+                        }
+                    } catch (error) {
+                        console.log('Creating new file');
+                    }
+                    
+                    // Append new row to existing content
+                    const newContent = existingContent + formatCSVRow(formData);
+                    
+                    // Save to GitHub
+                    const body = {
+                        message: `Add new research study submission from ${formData.fullName}`,
+                        content: btoa(newContent),
+                        sha: sha // Include SHA if updating existing file
+                    };
+                    
+                    const response = await fetch(
+                        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CSV_PATH}`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `token ${GITHUB_TOKEN}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(body)
+                        }
+                    );
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('GitHub API Error:', errorData);
+                        throw new Error(`GitHub API error: ${response.status}`);
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error saving to GitHub:', error);
+                    throw error;
+                }
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                setIsSubmitting(true);
+                setSubmitStatus(null);
+                
+                try {
+                    await saveToGitHub();
+                    setSubmitStatus('success');
+                    // Reset form
+                    setFormData({
+                        fullName: '',
+                        profession: '',
+                        email: '',
+                        mobile: '',
+                        preferredDay: '',
+                        preferredTime: '',
+                        githubId: ''
+                    });
+                } catch (error) {
+                    setSubmitStatus('error');
+                    console.error('Submission error:', error);
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            return (
+                <div className="research-form-container">
+                    <style>{`
+                        @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap');
+                        
+                        .research-form-container {
+                            min-height: 100vh;
+                            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                            padding: 3rem 1rem;
+                            font-family: 'Inter', sans-serif;
+                        }
+                        
+                        .form-card {
+                            max-width: 720px;
+                            margin: 0 auto;
+                            background: rgba(255, 255, 255, 0.95);
+                            border-radius: 20px;
+                            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+                            overflow: hidden;
+                            backdrop-filter: blur(10px);
+                        }
+                        
+                        .form-header {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 3rem 2rem;
+                            text-align: center;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .form-header::before {
+                            content: '';
+                            position: absolute;
+                            top: -50%;
+                            right: -50%;
+                            width: 200%;
+                            height: 200%;
+                            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                            animation: pulse 4s ease-in-out infinite;
+                        }
+                        
+                        @keyframes pulse {
+                            0%, 100% { transform: scale(1); opacity: 0.5; }
+                            50% { transform: scale(1.1); opacity: 0.8; }
+                        }
+                        
+                        .form-title {
+                            font-family: 'Crimson Text', serif;
+                            font-size: 2.5rem;
+                            font-weight: 600;
+                            margin-bottom: 0.5rem;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .form-subtitle {
+                            font-size: 1.1rem;
+                            opacity: 0.9;
+                            margin-bottom: 1rem;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .form-investigators {
+                            font-size: 0.95rem;
+                            font-style: italic;
+                            opacity: 0.85;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .form-body {
+                            padding: 3rem 2rem;
+                        }
+                        
+                        .form-group {
+                            margin-bottom: 2rem;
+                            animation: fadeInUp 0.6s ease-out;
+                            animation-fill-mode: both;
+                        }
+                        
+                        .form-group:nth-child(1) { animation-delay: 0.1s; }
+                        .form-group:nth-child(2) { animation-delay: 0.2s; }
+                        .form-group:nth-child(3) { animation-delay: 0.3s; }
+                        .form-group:nth-child(4) { animation-delay: 0.4s; }
+                        .form-group:nth-child(5) { animation-delay: 0.5s; }
+                        .form-group:nth-child(6) { animation-delay: 0.6s; }
+                        .form-group:nth-child(7) { animation-delay: 0.7s; }
+                        
+                        @keyframes fadeInUp {
+                            from {
+                                opacity: 0;
+                                transform: translateY(20px);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                        
+                        .form-label {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            font-weight: 600;
+                            color: #2d3748;
+                            margin-bottom: 0.5rem;
+                            font-size: 0.95rem;
+                        }
+                        
+                        .form-label i {
+                            color: #667eea;
+                        }
+                        
+                        .form-input,
+                        .form-select {
+                            width: 100%;
+                            padding: 0.875rem 1rem;
+                            border: 2px solid #e2e8f0;
+                            border-radius: 12px;
+                            font-size: 1rem;
+                            transition: all 0.3s ease;
+                            background: white;
+                            box-sizing: border-box;
+                        }
+                        
+                        .form-input:focus,
+                        .form-select:focus {
+                            outline: none;
+                            border-color: #667eea;
+                            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                            transform: translateY(-1px);
+                        }
+                        
+                        .form-input.error,
+                        .form-select.error {
+                            border-color: #f56565;
+                            animation: shake 0.3s ease-in-out;
+                        }
+                        
+                        @keyframes shake {
+                            0%, 100% { transform: translateX(0); }
+                            25% { transform: translateX(-5px); }
+                            75% { transform: translateX(5px); }
+                        }
+                        
+                        .error-message {
+                            color: #f56565;
+                            font-size: 0.875rem;
+                            margin-top: 0.25rem;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.25rem;
+                        }
+                        
+                        .radio-group {
+                            display: flex;
+                            gap: 1.5rem;
+                            margin-top: 0.5rem;
+                        }
+                        
+                        .radio-label {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            cursor: pointer;
+                            padding: 0.75rem 1.25rem;
+                            border: 2px solid #e2e8f0;
+                            border-radius: 10px;
+                            transition: all 0.3s ease;
+                        }
+                        
+                        .radio-label:hover {
+                            border-color: #cbd5e0;
+                            background: #f7fafc;
+                        }
+                        
+                        .radio-input {
+                            width: 20px;
+                            height: 20px;
+                            accent-color: #667eea;
+                        }
+                        
+                        .radio-input:checked + .radio-text {
+                            color: #667eea;
+                            font-weight: 600;
+                        }
+                        
+                        .radio-label:has(.radio-input:checked) {
+                            border-color: #667eea;
+                            background: rgba(102, 126, 234, 0.05);
+                        }
+                        
+                        .form-note {
+                            margin-top: 1rem;
+                            padding: 1rem;
+                            background: rgba(102, 126, 234, 0.08);
+                            border-left: 4px solid #667eea;
+                            border-radius: 8px;
+                            font-size: 0.875rem;
+                            color: #4a5568;
+                            font-style: italic;
+                        }
+                        
+                        .submit-button {
+                            width: 100%;
+                            padding: 1rem 2rem;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            border-radius: 12px;
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.75rem;
+                            margin-top: 2rem;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .submit-button::before {
+                            content: '';
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            width: 0;
+                            height: 0;
+                            background: rgba(255, 255, 255, 0.2);
+                            border-radius: 50%;
+                            transform: translate(-50%, -50%);
+                            transition: width 0.6s, height 0.6s;
+                        }
+                        
+                        .submit-button:hover::before {
+                            width: 300px;
+                            height: 300px;
+                        }
+                        
+                        .submit-button:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+                        }
+                        
+                        .submit-button:disabled {
+                            opacity: 0.7;
+                            cursor: not-allowed;
+                            transform: none;
+                        }
+                        
+                        .submit-button i {
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .spinner {
+                            animation: spin 1s linear infinite;
+                        }
+                        
+                        @keyframes spin {
+                            from { transform: rotate(0deg); }
+                            to { transform: rotate(360deg); }
+                        }
+                        
+                        .status-message {
+                            margin-top: 1.5rem;
+                            padding: 1rem 1.5rem;
+                            border-radius: 10px;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.75rem;
+                            animation: slideIn 0.3s ease-out;
+                        }
+                        
+                        @keyframes slideIn {
+                            from {
+                                opacity: 0;
+                                transform: translateY(-10px);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                        
+                        .status-message.success {
+                            background: #f0fdf4;
+                            border: 1px solid #86efac;
+                            color: #166534;
+                        }
+                        
+                        .status-message.error {
+                            background: #fef2f2;
+                            border: 1px solid #fca5a5;
+                            color: #991b1b;
+                        }
+                        
+                        @media (max-width: 640px) {
+                            .form-title {
+                                font-size: 2rem;
+                            }
+                            
+                            .radio-group {
+                                flex-direction: column;
+                            }
+                            
+                            .form-header {
+                                padding: 2rem 1.5rem;
+                            }
+                            
+                            .form-body {
+                                padding: 2rem 1.5rem;
+                            }
+                        }
+                    `}</style>
+                    
+                    <div className="form-card">
+                        <div className="form-header">
+                            <h1 className="form-title">AI Research Study on Co-Creativity</h1>
+                            <p className="form-subtitle">Artists & Designers</p>
+                            <p className="form-investigators">
+                                Principal Investigators: Professor Iannis Bardakos & Professor Nena Roa Seiler
+                            </p>
+                        </div>
+                        
+                        <form className="form-body" onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <Icon name="users" />
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleInputChange}
+                                    className={`form-input ${errors.fullName ? 'error' : ''}`}
+                                    placeholder="Enter your full name"
+                                />
+                                {errors.fullName && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.fullName}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <Icon name="file-text" />
+                                    Profession or Role
+                                </label>
+                                <input
+                                    type="text"
+                                    name="profession"
+                                    value={formData.profession}
+                                    onChange={handleInputChange}
+                                    className={`form-input ${errors.profession ? 'error' : ''}`}
+                                    placeholder="e.g., Graphic Designer, Digital Artist"
+                                />
+                                {errors.profession && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.profession}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    className={`form-input ${errors.email ? 'error' : ''}`}
+                                    placeholder="your.email@example.com"
+                                />
+                                {errors.email && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.email}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    Mobile Contact Number with Country Code
+                                </label>
+                                <input
+                                    type="tel"
+                                    name="mobile"
+                                    value={formData.mobile}
+                                    onChange={handleInputChange}
+                                    className={`form-input ${errors.mobile ? 'error' : ''}`}
+                                    placeholder="+1 234 567 8900"
+                                />
+                                {errors.mobile && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.mobile}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <Icon name="calendar" />
+                                    Preferred day for study onboarding / questions / help with video call
+                                </label>
+                                <div className="radio-group">
+                                    <label className="radio-label">
+                                        <input
+                                            type="radio"
+                                            name="preferredDay"
+                                            value="weekdays"
+                                            checked={formData.preferredDay === 'weekdays'}
+                                            onChange={handleInputChange}
+                                            className="radio-input"
+                                        />
+                                        <span className="radio-text">Weekdays (Mon–Fri)</span>
+                                    </label>
+                                    <label className="radio-label">
+                                        <input
+                                            type="radio"
+                                            name="preferredDay"
+                                            value="weekends"
+                                            checked={formData.preferredDay === 'weekends'}
+                                            onChange={handleInputChange}
+                                            className="radio-input"
+                                        />
+                                        <span className="radio-text">Weekends (Sat–Sun)</span>
+                                    </label>
+                                </div>
+                                {errors.preferredDay && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.preferredDay}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <Icon name="clock" />
+                                    Preferred time for study onboarding / questions / help with video call (IST)
+                                </label>
+                                <input
+                                    type="text"
+                                    name="preferredTime"
+                                    value={formData.preferredTime}
+                                    onChange={handleInputChange}
+                                    className={`form-input ${errors.preferredTime ? 'error' : ''}`}
+                                    placeholder="e.g., 2:00 PM - 4:00 PM IST"
+                                />
+                                {errors.preferredTime && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.preferredTime}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <Icon name="github" />
+                                    GitHub ID
+                                </label>
+                                <input
+                                    type="text"
+                                    name="githubId"
+                                    value={formData.githubId}
+                                    onChange={handleInputChange}
+                                    className={`form-input ${errors.githubId ? 'error' : ''}`}
+                                    placeholder="your-github-username"
+                                />
+                                {errors.githubId && (
+                                    <div className="error-message">
+                                        <Icon name="alert-circle" size={14} />
+                                        {errors.githubId}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="form-note">
+                                <strong>Note:</strong> Meetings will be recorded. Written guides will be provided.
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                className="submit-button" 
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Icon name="loader-2" className="spinner" />
+                                        Saving to GitHub...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Icon name="check-circle" />
+                                        Verify and Save
+                                    </>
+                                )}
+                            </button>
+                            
+                            {submitStatus === 'success' && (
+                                <div className="status-message success">
+                                    <Icon name="check-circle" />
+                                    <div>
+                                        <strong>Success!</strong> Your submission has been saved to GitHub.
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {submitStatus === 'error' && (
+                                <div className="status-message error">
+                                    <Icon name="alert-circle" />
+                                    <div>
+                                        <strong>Error!</strong> Failed to save submission. Please check your GitHub configuration and try again.
+                                    </div>
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the form
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ResearchStudyForm />);
+    </script>
+</body>
+</html>
