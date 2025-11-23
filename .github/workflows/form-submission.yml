@@ -1,1 +1,69 @@
+name: Handle Form Submission
 
+on:
+  workflow_dispatch:
+    inputs:
+      fullName:
+        description: 'Full Name'
+        required: true
+        type: string
+      profession:
+        description: 'Profession'
+        required: true
+        type: string
+      email:
+        description: 'Email'
+        required: true
+        type: string
+      mobile:
+        description: 'Mobile'
+        required: true
+        type: string
+      preferredDay:
+        description: 'Preferred Day'
+        required: true
+        type: string
+      preferredTime:
+        description: 'Preferred Time'
+        required: true
+        type: string
+      githubId:
+        description: 'GitHub ID'
+        required: true
+        type: string
+
+jobs:
+  save-submission:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.FORM_SUBMISSIONS_TOKEN }}
+    
+    - name: Create or update CSV file
+      run: |
+        # Set up git config
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Define CSV file path
+        CSV_FILE="AI-Survey/submissions.csv"
+        
+        # Create directory if it doesn't exist
+        mkdir -p AI-Survey
+        
+        # Add headers if file doesn't exist
+        if [ ! -f "$CSV_FILE" ]; then
+          echo "Timestamp,Full Name,Profession,Email,Mobile,Preferred Day,Preferred Time,GitHub ID" > "$CSV_FILE"
+        fi
+        
+        # Add the new submission
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        echo "\"$TIMESTAMP\",\"${{ github.event.inputs.fullName }}\",\"${{ github.event.inputs.profession }}\",\"${{ github.event.inputs.email }}\",\"${{ github.event.inputs.mobile }}\",\"${{ github.event.inputs.preferredDay }}\",\"${{ github.event.inputs.preferredTime }}\",\"${{ github.event.inputs.githubId }}\"" >> "$CSV_FILE"
+        
+        # Commit and push
+        git add "$CSV_FILE"
+        git commit -m "Add submission from ${{ github.event.inputs.fullName }}"
+        git push
