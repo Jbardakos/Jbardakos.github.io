@@ -203,12 +203,19 @@
     const { useState } = React;
 
     // GitHub configuration
+
+
     const CLIENT_ID = '0v23IiaqIPNxfIv6yM2x';          // Your OAuth App Client ID
     const OWNER = 'jbardakos';
     const REPO = 'jbardakos.github.io';
     const WORKFLOW_FILE = 'create-issue.yml';          // The workflow you created
-    const DEVICE_CODE_URL = 'https://github.com/login/device/code';
-    const TOKEN_URL = 'https://github.com/login/oauth/access_token';
+    
+    const WORKER = 'https://autumn-recipe-1e6d.jbardakos.workers.dev/proxy';
+    const DEVICE_CODE_URL = `${WORKER}/login/device/code`;
+    const TOKEN_URL = `${WORKER}/login/oauth/access_token`;
+    
+    // const DEVICE_CODE_URL = 'https://github.com/login/device/code';
+    // const TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
