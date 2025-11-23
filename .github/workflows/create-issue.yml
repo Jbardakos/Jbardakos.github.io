@@ -19,22 +19,48 @@ on:
         required: true
 
 jobs:
-  create_issue:
+  save_and_issue:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Create GitHub Issue
-        uses: peter-evans/create-issue-from-file@v4
-        if: always()
-        with:
-          token: ${{ secrets.ISSUE_WRITE_TOKEN }}
-          title: "New Submission: ${{ github.event.inputs.fullName }}"
-          content-filepath: submission.csv
-      - name: Write temporary file
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare CSV header if missing
         run: |
-          echo "Full Name: ${{ github.event.inputs.fullName }}" > submission.txt
-          echo "Profession: ${{ github.event.inputs.profession }}" >> submission.txt
-          echo "Email: ${{ github.event.inputs.email }}" >> submission.txt
-          echo "Mobile: ${{ github.event.inputs.mobile }}" >> submission.txt
-          echo "Preferred Day: ${{ github.event.inputs.preferredDay }}" >> submission.txt
-          echo "Preferred Time: ${{ github.event.inputs.preferredTime }}" >> submission.txt
-          echo "GitHub ID: ${{ github.event.inputs.githubId }}" >> submission.txt
+          if [ ! -f submissions.csv ]; then
+            echo "fullName,profession,email,mobile,preferredDay,preferredTime,githubId" > submissions.csv
+          fi
+
+      - name: Append submission to CSV
+        run: |
+          echo "${{ github.event.inputs.fullName }},${{ github.event.inputs.profession }},${{ github.event.inputs.email }},${{ github.event.inputs.mobile }},${{ github.event.inputs.preferredDay }},${{ github.event.inputs.preferredTime }},${{ github.event.inputs.githubId }}" >> submissions.csv
+
+      - name: Commit updated CSV
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add submissions.csv
+          git commit -m "New study submission: ${{ github.event.inputs.fullName }}" || echo "No changes"
+        env:
+          REPO_TOKEN: ${{ secrets.IssueWriteToken }}
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.IssueWriteToken }}
+
+      - name: Create GitHub Issue summary
+        uses: peter-evans/create-issue@v5
+        with:
+          token: ${{ secrets.IssueWriteToken }}
+          title: "New Submission: ${{ github.event.inputs.fullName }}"
+          body: |
+            **Research Participant Submission**
+            Full Name: ${{ github.event.inputs.fullName }}
+            Profession: ${{ github.event.inputs.profession }}
+            Email: ${{ github.event.inputs.email }}
+            Mobile: ${{ github.event.inputs.mobile }}
+            Preferred Day: ${{ github.event.inputs.preferredDay }}
+            Preferred Time: ${{ github.event.inputs.preferredTime }}
+            GitHub ID: ${{ github.event.inputs.githubId }}
