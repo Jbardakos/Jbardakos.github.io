@@ -1,0 +1,40 @@
+name: Save Form Submission as Issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      fullName:
+        required: true
+      profession:
+        required: true
+      email:
+        required: true
+      mobile:
+        required: true
+      preferredDay:
+        required: true
+      preferredTime:
+        required: true
+      githubId:
+        required: true
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Issue
+        uses: peter-evans/create-issue-from-file@v4
+        if: always()
+        with:
+          token: ${{ secrets.ISSUE_WRITE_TOKEN }}
+          title: "New Submission: ${{ github.event.inputs.fullName }}"
+          content-filepath: submission.csv
+      - name: Write temporary file
+        run: |
+          echo "Full Name: ${{ github.event.inputs.fullName }}" > submission.txt
+          echo "Profession: ${{ github.event.inputs.profession }}" >> submission.txt
+          echo "Email: ${{ github.event.inputs.email }}" >> submission.txt
+          echo "Mobile: ${{ github.event.inputs.mobile }}" >> submission.txt
+          echo "Preferred Day: ${{ github.event.inputs.preferredDay }}" >> submission.txt
+          echo "Preferred Time: ${{ github.event.inputs.preferredTime }}" >> submission.txt
+          echo "GitHub ID: ${{ github.event.inputs.githubId }}" >> submission.txt
